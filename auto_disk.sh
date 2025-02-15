@@ -15,11 +15,11 @@ if [ "${sysDisk}" == "" ]; then
 	echo -e "Bye-bye"
 	exit;
 fi
-#检测/目录是否已挂载磁盘
-mountDisk=`df -h | awk '{print $6}' |grep "^/$"`
+#检测/www目录是否已挂载磁盘
+mountDisk=`df -h | awk '{print $6}' |grep www`
 if [ "${mountDisk}" != "" ]; then
-	echo -e "Root directory has been mounted,exit"
-	echo -e "根目录已被挂载,不执行任何操作"
+	echo -e "www directory has been mounted,exit"
+	echo -e "www目录已被挂载,不执行任何操作"
 	echo -e "Bye-bye"
 	exit;
 fi
@@ -47,9 +47,9 @@ fdiskP(){
 	for i in `cat /proc/partitions|grep -v name|grep -v ram|awk '{print $4}'|grep -v '^$'|grep -v '[0-9]$'|grep -v 'vda'|grep -v 'xvda'|grep -v 'sda'|grep -e 'vd' -e 'sd' -e 'xvd'`;
 	do
 		#判断指定目录是否被挂载
-		isR=`df -P|grep "^/$"`
+		isR=`df -P|grep $setup_path`
 		if [ "$isR" != "" ];then
-			echo "Error: The root directory has been mounted."
+			echo "Error: The $setup_path directory has been mounted."
 			return;
 		fi
 		
@@ -252,7 +252,7 @@ start_service()
 
 while [ "$go" != 'y' ] && [ "$go" != 'n' ]
 do
-	read -p "Do you want to try to mount the data disk to the root directory(/)?(y/n): " go;
+	read -p "Do you want to try to mount the data disk to the $setup_path directory?(y/n): " go;
 done
 
 if [ "$go" = 'n' ];then
@@ -263,11 +263,11 @@ fi
 if [ -f "/etc/init.d/bt" ] && [ -f "/www/server/panel/data/port.pl" ]; then
 	disk=`cat /proc/partitions|grep -v name|grep -v ram|awk '{print $4}'|grep -v '^$'|grep -v '[0-9]$'|grep -v 'vda'|grep -v 'xvda'|grep -v 'sda'|grep -e 'vd' -e 'sd' -e 'xvd'`
 	diskFree=`cat /proc/partitions |grep ${disk}|awk '{print $3}'`
-	rootUse=`du -sh -k /|awk '{print $1}'`
+	wwwUse=`du -sh -k /www|awk '{print $1}'`
 
-	if [ "${diskFree}" -lt "${rootUse}" ]; then
-		echo -e "Sorry,your data disk is too small,can't copy to the root directory."
-		echo -e "对不起，你的数据盘太小,无法迁移根目录数据到此数据盘"
+	if [ "${diskFree}" -lt "${wwwUse}" ]; then
+		echo -e "Sorry,your data disk is too small,can't coxpy to the www."
+		echo -e "对不起，你的数据盘太小,无法迁移www目录数据到此数据盘"
 		exit;
 	else
 		echo -e ""
@@ -277,7 +277,7 @@ if [ -f "/etc/init.d/bt" ] && [ -f "/www/server/panel/data/port.pl" ]; then
 		sleep 3
 		stop_service
 		echo -e ""
-		mv / /bt-backup-root
+		mv /www /bt-backup
 		echo -e "disk partition..."
 		echo -e "磁盘分区..."
 		sleep 2
@@ -286,7 +286,7 @@ if [ -f "/etc/init.d/bt" ] && [ -f "/www/server/panel/data/port.pl" ]; then
 		echo -e ""
 		echo -e "move disk..."
 		echo -e "迁移数据中..."
-		\cp -r -p -a /bt-backup-root/* /
+		\cp -r -p -a /bt-backup/* /www
 		echo -e ""
 		echo -e "Done"
 		echo -e "迁移完成"
@@ -302,3 +302,4 @@ else
 	echo -e "Done"
 	echo -e "挂载成功"
 fi
+
