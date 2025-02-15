@@ -7,36 +7,6 @@ setup_path=/
 	#setup_path=$1;
 #fi
 
-#检测/目录是否已挂载磁盘
-mountDisk=`df -h | awk '{print $6}' |grep "^/$"`
-if [ "${mountDisk}" != "" ]; then
-	echo -e "检测到根目录已被挂载，正在尝试卸载..."
-	
-	# 停止所有服务
-	stop_service
-	
-	# 获取当前根目录挂载设备
-	root_device=`df -h | grep "^/dev.*/$" | awk '{print $1}'`
-	
-	# 创建临时目录并将根目录数据复制
-	mkdir -p /tmp/root_backup
-	\cp -r -p -a /* /tmp/root_backup/
-	
-	# 卸载根目录
-	umount /
-	
-	# 从 fstab 中删除根目录挂载项
-	sed -i '\#^/dev.*/$#d' /etc/fstab
-	
-	# 将备份数据移回
-	\cp -r -p -a /tmp/root_backup/* /
-	rm -rf /tmp/root_backup
-	
-	echo -e "根目录卸载完成，继续执行挂载操作..."
-else
-	echo -e "根目录未被挂载，继续执行..."
-fi
-
 #检测磁盘数量
 sysDisk=`cat /proc/partitions|grep -v name|grep -v ram|awk '{print $4}'|grep -v '^$'|grep -v '[0-9]$'|grep -v 'vda'|grep -v 'xvda'|grep -v 'sda'|grep -e 'vd' -e 'sd' -e 'xvd'`
 if [ "${sysDisk}" == "" ]; then
